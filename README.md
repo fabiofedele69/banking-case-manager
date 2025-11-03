@@ -19,7 +19,6 @@ This application is designed to run in a **DevPod workspace** or any containeriz
 
 ## Technical Architecture
 
-```mermaid
 flowchart TD
     A[Browser (Client)] -->|HTTP Requests: GET / POST / PUT / DELETE| B[Flask App (app.py)]
     B --> C[In-Memory Storage (Python List)]
