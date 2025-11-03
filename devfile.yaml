@@ -1,0 +1,51 @@
+schemaVersion: 2.2.0
+metadata:
+  name: banking-case-manager
+  version: 1.2.0
+  description: Flask banking case manager with browser-based CRUD and DevPod
+
+projects:
+  - name: banking-case-manager
+    source:
+      type: local
+
+components:
+  - name: python-dev
+    container:
+      image: python:3.11-slim
+      mountSources: true
+      memoryLimit: 1Gi
+      command: ["/bin/sh"]
+      args: ["-c", "while sleep 1000; do :; done"]
+      env:
+        - name: FLASK_APP
+          value: /projects/banking-case-manager/app.py
+        - name: FLASK_RUN_HOST
+          value: 0.0.0.0
+        - name: FLASK_RUN_PORT
+          value: "8080"
+        - name: FLASK_ENV
+          value: development
+      endpoints:
+        - name: flask
+          targetPort: 8080
+          exposure: public
+
+commands:
+  - id: install-deps
+    exec:
+      component: python-dev
+      commandLine: pip install -r requirements.txt
+      workingDir: /projects/banking-case-manager
+      group:
+        kind: build
+        isDefault: true
+
+  - id: run-flask
+    exec:
+      component: python-dev
+      commandLine: flask --app /projects/banking-case-manager/app.py run --host=0.0.0.0 --port=8080 --debug
+      workingDir: /projects/banking-case-manager
+      group:
+        kind: run
+        isDefault: true
