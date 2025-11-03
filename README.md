@@ -35,3 +35,5 @@ This application is designed to run in a **DevPod workspace** or any containeriz
 #### /cases/<id>	GET	Get a specific case
 #### /cases/<id>	PUT	Update a specific case
 #### /cases/<id>	DELETE	Delete a specific case
+
+<img width="2880" height="860" alt="image" src="https://github.com/user-attachments/assets/86579a8b-c927-4040-b18e-3ac892389b1a" />
