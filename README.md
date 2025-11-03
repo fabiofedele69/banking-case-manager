@@ -17,20 +17,4 @@ This application is designed to run in a **DevPod workspace** or any containeriz
 
 ---
 
-## Technical Architecture
-
-flowchart TD
-    A[Browser (Client)] -->|HTTP Requests: GET / POST / PUT / DELETE| B[Flask App (app.py)]
-    B --> C[In-Memory Storage (Python List)]
-    B -->|Render Table & Forms| A
-
-    subgraph Browser_View
-        A1[Create Case Form]
-        A2[Editable Table Rows]
-        A3[Update / Close / Delete Buttons]
-    end
-
-    A --> Browser_View
-    Browser_View --> B
-    C --> B
 # banking-case-manager
