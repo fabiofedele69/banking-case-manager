@@ -17,4 +17,11 @@ This application is designed to run in a **DevPod workspace** or any containeriz
 
 ---
 
+banking-case-manager/
+├── app.py                # Main Flask application
+├── requirements.txt      # Python dependencies
+├── devfile.yaml          # DevPod workspace configuration
+└── templates/
+    └── index.html        # Browser-based UI
+
 # banking-case-manager
