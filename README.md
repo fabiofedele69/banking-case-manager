@@ -17,11 +17,21 @@ This application is designed to run in a **DevPod workspace** or any containeriz
 
 ---
 
-banking-case-manager/
-├── app.py                # Main Flask application
-├── requirements.txt      # Python dependencies
-├── devfile.yaml          # DevPod workspace configuration
-└── templates/
-    └── index.html        # Browser-based UI
+Flow Explanation:
 
+Browser sends HTTP requests to Flask:
+
+GET /cases → fetch all cases
+
+POST /cases → create new case
+
+PUT /cases/<id> → update case
+
+DELETE /cases/<id> → delete case
+
+Flask processes requests and updates in-memory storage.
+
+Browser table updates dynamically using JavaScript fetch API.
+
+Status colors: OPEN (green) / CLOSED (red).
 # banking-case-manager
