@@ -20,18 +20,18 @@ This application is designed to run in a **DevPod workspace** or any containeriz
 Flow Explanation:
 
 Browser sends HTTP requests to Flask:
-
 GET /cases → fetch all cases
-
 POST /cases → create new case
-
 PUT /cases/<id> → update case
-
 DELETE /cases/<id> → delete case
-
 Flask processes requests and updates in-memory storage.
-
 Browser table updates dynamically using JavaScript fetch API.
-
 Status colors: OPEN (green) / CLOSED (red).
-# banking-case-manager
+
+API Endpoints
+Endpoint	Method	Description
+/cases	GET	List all cases
+/cases	POST	Create a new case
+/cases/<id>	GET	Get a specific case
+/cases/<id>	PUT	Update a specific case
+/cases/<id>	DELETE	Delete a specific case
