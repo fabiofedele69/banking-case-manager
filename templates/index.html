@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Banking Case Manager</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        input, select { padding: 5px; margin-right: 10px; }
+        button { padding: 5px 10px; cursor: pointer; }
+        .OPEN { background-color: #d4edda; }   /* green */
+        .CLOSED { background-color: #f8d7da; } /* red */
+    </style>
+</head>
+<body>
+    <h1>Banking Case Manager</h1>
+
+    <!-- Create new case -->
+    <h2>Create New Case</h2>
+    <form id="createForm">
+        <input type="text" id="customer_name" placeholder="Customer Name" required>
+        <input type="text" id="case_type" placeholder="Case Type" required>
+        <input type="text" id="description" placeholder="Description">
+        <button type="submit">Add Case</button>
+    </form>
+
+    <!-- Cases Table -->
+    <h2>Cases</h2>
+    <table id="casesTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Customer</th>
+                <th>Case Type</th>
+                <th>Status</th>
+                <th>Description</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <script>
+        const tableBody = document.querySelector("#casesTable tbody");
+        const createForm = document.getElementById("createForm");
+
+        // Fetch and display all cases
+        async function loadCases() {
+            tableBody.innerHTML = '';
+            const res = await fetch("/cases");
+            const cases = await res.json();
+            cases.forEach(c => {
+                const row = document.createElement("tr");
+                row.className = c.status;
+                row.innerHTML = `
+                    <td>${c.id}</td>
+                    <td><input type="text" value="${c.customer_name}" data-id="${c.id}" class="editCustomer"></td>
+                    <td><input type="text" value="${c.case_type}" data-id="${c.id}" class="editType"></td>
+                    <td>
+                        <select data-id="${c.id}" class="editStatus">
+                            <option value="OPEN" ${c.status==="OPEN" ? "selected" : ""}>OPEN</option>
+                            <option value="CLOSED" ${c.status==="CLOSED" ? "selected" : ""}>CLOSED</option>
+                        </select>
+                    </td>
+                    <td><input type="text" value="${c.description}" data-id="${c.id}" class="editDesc"></td>
+                    <td>
+                        <button onclick="updateCase(${c.id})">Update</button>
+                        <button onclick="deleteCase(${c.id})">Delete</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Create new case
+        createForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const customer_name = document.getElementById("customer_name").value;
+            const case_type = document.getElementById("case_type").value;
+            const description = document.getElementById("description").value;
+
+            await fetch("/cases", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ customer_name, case_type, description })
+            });
+
+            createForm.reset();
+            loadCases();
+        });
+
+        // Update existing case
+        async function updateCase(id) {
+            const customer_name = document.querySelector(`.editCustomer[data-id='${id}']`).value;
+            const case_type = document.querySelector(`.editType[data-id='${id}']`).value;
+            const status = document.querySelector(`.editStatus[data-id='${id}']`).value;
+            const description = document.querySelector(`.editDesc[data-id='${id}']`).value;
+
+            await fetch(`/cases/${id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ customer_name, case_type, status, description })
+            });
+            loadCases();
+        }
+
+        // Delete case
+        async function deleteCase(id) {
+            await fetch(`/cases/${id}`, { method: "DELETE" });
+            loadCases();
+        }
+
+        // Initial load
+        loadCases();
+    </script>
+</body>
+</html>
