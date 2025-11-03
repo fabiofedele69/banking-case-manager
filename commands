@@ -1,0 +1,18 @@
+curl -X POST http://localhost:8080/cases \
+  -H "Content-Type: application/json" \
+  -d '{
+        "customer_name": "David",
+        "case_type": "Loan",
+        "description": "New loan request"
+      }'
+
+
+curl -X PUT http://localhost:8080/cases/1 \
+  -H "Content-Type: application/json" \
+  -d '{
+        "status": "CLOSED",
+        "description": "Loan approved"
+      }'
+
+
+curl -X DELETE http://localhost:8080/cases/1
