@@ -1,13 +1,15 @@
 banking-case-manager/
+│
 ├── app.py
 ├── requirements.txt
 ├── templates/
 │   └── index.html
 ├── Dockerfile
-├── .dockerignore
-└── chart/
-    ├── Chart.yaml
-    ├── values.yaml
-    └── templates/
-        ├── deployment.yaml
-        └── service.yaml
+├── helm/
+│   └── banking-case-manager/
+│       ├── Chart.yaml
+│       ├── values.yaml
+│       └── templates/
+│           ├── deployment.yaml
+│           └── service.yaml
+└── README.md
