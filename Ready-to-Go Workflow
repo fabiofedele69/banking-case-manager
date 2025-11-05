@@ -19,12 +19,20 @@ powershell
 minikube ip
 # Open http://<minikube-ip>:30080/
 
-6. Update app:
+6. Forward IP
+powershell
+kubectl port-forward svc/banking-case-manager 8080:8080
+
+7. Access to the application
+url 
+http://localhost:8080/
+
+8. Update app:
 powershell
 docker build -t banking-case-manager:latest .
 helm upgrade banking-case-manager ./chart
 
-7. Uninstall:
+9. Uninstall:
 powershell
 helm uninstall banking-case-manager
 
