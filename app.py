@@ -1,73 +1,61 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 
 app = Flask(__name__)
 
-# In-memory "database"
-cases = []
-case_id_counter = 1
+# In-memory database
+cases = [
+    {"id": 1, "customer_name": "Alice", "case_type": "Loan", "description": "Loan request", "status": "OPEN"},
+    {"id": 2, "customer_name": "Bob", "case_type": "Account", "description": "Open new account", "status": "IN_PROGRESS"},
+]
 
-# ---------------------------
-# API Endpoints
-# ---------------------------
+def get_next_id() -> int:
+    return max((c["id"] for c in cases), default=0) + 1
 
-# Create a new case
-@app.route("/cases", methods=["POST"])
-def create_case():
-    global case_id_counter
-    data = request.json
-    case = {
-        "id": case_id_counter,
-        "customer_name": data.get("customer_name"),
-        "case_type": data.get("case_type"),
-        "status": "OPEN",
-        "description": data.get("description", "")
-    }
-    cases.append(case)
-    case_id_counter += 1
-    return jsonify(case), 201
+@app.route("/")
+def index():
+    return render_template("index.html", cases=cases)
 
-# List all cases
-@app.route("/cases", methods=["GET"])
-def list_cases():
+@app.route("/cases", methods=["GET", "POST"])
+def manage_cases():
+    if request.method == "POST":
+        data = request.form if request.form else request.get_json(force=True)
+        customer_name = data.get("customer_name", "").strip()
+        case_type = data.get("case_type", "").strip()
+        description = data.get("description", "").strip()
+        if not (customer_name and case_type and description):
+            return "Missing data", 400
+        new_case = {
+            "id": get_next_id(),
+            "customer_name": customer_name,
+            "case_type": case_type,
+            "description": description,
+            "status": "OPEN"
+        }
+        cases.append(new_case)
+        return redirect(url_for("index"))
     return jsonify(cases)
 
-# Get a single case by ID
-@app.route("/cases/<int:case_id>", methods=["GET"])
-def get_case(case_id):
+@app.route("/cases/<int:case_id>", methods=["PUT", "DELETE"])
+def modify_case(case_id: int):
     case = next((c for c in cases if c["id"] == case_id), None)
     if not case:
-        return jsonify({"error": "Case not found"}), 404
-    return jsonify(case)
+        return "Case not found", 404
+    if request.method == "PUT":
+        data = request.form if request.form else request.get_json(force=True)
+        case["description"] = data.get("description", case["description"])
+        case["status"] = data.get("status", case["status"])
+        return redirect(url_for("index"))
+    if request.method == "DELETE":
+        cases.remove(case)
+        return "", 204
 
-# Update an existing case
-@app.route("/cases/<int:case_id>", methods=["PUT"])
-def update_case(case_id):
-    data = request.json
+@app.route("/cases/<int:case_id>/close", methods=["POST"])
+def close_case(case_id: int):
     case = next((c for c in cases if c["id"] == case_id), None)
     if not case:
-        return jsonify({"error": "Case not found"}), 404
-    case["status"] = data.get("status", case["status"])
-    case["customer_name"] = data.get("customer_name", case["customer_name"])
-    case["case_type"] = data.get("case_type", case["case_type"])
-    case["description"] = data.get("description", case["description"])
-    return jsonify(case)
-
-# Delete a case
-@app.route("/cases/<int:case_id>", methods=["DELETE"])
-def delete_case(case_id):
-    global cases
-    case = next((c for c in cases if c["id"] == case_id), None)
-    if not case:
-        return jsonify({"error": "Case not found"}), 404
-    cases = [c for c in cases if c["id"] != case_id]
-    return jsonify({"message": f"Case {case_id} deleted"}), 200
-
-# ---------------------------
-# Browser-friendly view
-# ---------------------------
-@app.route("/", methods=["GET"])
-def home():
-    return render_template("index.html", cases=cases)
+        return "Case not found", 404
+    case["status"] = "CLOSED"
+    return redirect(url_for("index"))
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080, debug=True)
