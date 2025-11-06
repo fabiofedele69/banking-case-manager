@@ -1,10 +1,13 @@
-FROM python:3.10-slim
+FROM python:3.11-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+build-essential gcc libpq-dev && \
+rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip && pip install -r requirements.txt
-COPY . .
-ENV FLASK_APP=app.py
-ENV FLASK_ENV=production
-ENV PYTHONUNBUFFERED=1
+COPY requirements.txt /app/
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . /app
+ENV PORT=8080
 EXPOSE 8080
-CMD ["flask", "run", "--host=0.0.0.0", "--port=8080"]
+CMD ["gunicorn", "app:app", "-b", "0.0.0.0:8080", "--workers", "1"]
