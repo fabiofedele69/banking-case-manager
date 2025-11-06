@@ -5,6 +5,7 @@ banking-case-manager/
 ├── templates/
 │   └── index.html
 ├── Dockerfile
+│
 ├── helm/
 │   └── banking-case-manager/
 │       ├── Chart.yaml
@@ -12,4 +13,12 @@ banking-case-manager/
 │       └── templates/
 │           ├── deployment.yaml
 │           └── service.yaml
+│
+├── k8s/
+│   ├── namespace.yaml
+│   ├── postgres-secret.yaml
+│   ├── postgres-deployment.yaml
+│   ├── postgres-service.yaml
+│   └── psql-client.yaml
+│
 └── README.md
