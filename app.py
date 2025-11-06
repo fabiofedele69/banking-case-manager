@@ -1,61 +1,74 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+"""
+Flask case manager that persists to PostgreSQL via SQLAlchemy.
+Env variables used (in Kubernetes these will come from a Secret):
+DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD
+"""
+
+
+import os
+from datetime import datetime
+from flask import Flask, render_template, request, redirect, url_for
+from flask_sqlalchemy import SQLAlchemy
+
 
 app = Flask(__name__)
 
-# In-memory database
-cases = [
-    {"id": 1, "customer_name": "Alice", "case_type": "Loan", "description": "Loan request", "status": "OPEN"},
-    {"id": 2, "customer_name": "Bob", "case_type": "Account", "description": "Open new account", "status": "IN_PROGRESS"},
-]
 
-def get_next_id() -> int:
-    return max((c["id"] for c in cases), default=0) + 1
+# Read DB connection values from environment
+DB_HOST = os.environ.get('DB_HOST', 'pg-bank-postgresql')
+DB_PORT = os.environ.get('DB_PORT', '5432')
+DB_NAME = os.environ.get('DB_NAME', 'postgres')
+DB_USER = os.environ.get('DB_USER', 'postgres')
+DB_PASSWORD = os.environ.get('DB_PASSWORD', 'password123') # placeholder
 
-@app.route("/")
+
+app.config['SQLALCHEMY_DATABASE_URI'] = (
+f"postgresql+psycopg2://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+)
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+
+db = SQLAlchemy(app)
+
+
+class Case(db.Model):
+__tablename__ = 'cases'
+id = db.Column(db.Integer, primary_key=True)
+title = db.Column(db.String(255), nullable=False)
+description = db.Column(db.Text, nullable=True)
+status = db.Column(db.String(50), nullable=False, default='open')
+created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+def __repr__(self):
+return f"<Case {self.id} {self.title}>"
+
+
+@app.route('/', methods=['GET', 'POST'])
 def index():
-    return render_template("index.html", cases=cases)
+if request.method == 'POST':
+title = request.form.get('title', '').strip()
+description = request.form.get('description', '').strip()
+if title:
+c = Case(title=title, description=description)
+db.session.add(c)
+db.session.commit()
+return redirect(url_for('index'))
 
-@app.route("/cases", methods=["GET", "POST"])
-def manage_cases():
-    if request.method == "POST":
-        data = request.form if request.form else request.get_json(force=True)
-        customer_name = data.get("customer_name", "").strip()
-        case_type = data.get("case_type", "").strip()
-        description = data.get("description", "").strip()
-        if not (customer_name and case_type and description):
-            return "Missing data", 400
-        new_case = {
-            "id": get_next_id(),
-            "customer_name": customer_name,
-            "case_type": case_type,
-            "description": description,
-            "status": "OPEN"
-        }
-        cases.append(new_case)
-        return redirect(url_for("index"))
-    return jsonify(cases)
 
-@app.route("/cases/<int:case_id>", methods=["PUT", "DELETE"])
-def modify_case(case_id: int):
-    case = next((c for c in cases if c["id"] == case_id), None)
-    if not case:
-        return "Case not found", 404
-    if request.method == "PUT":
-        data = request.form if request.form else request.get_json(force=True)
-        case["description"] = data.get("description", case["description"])
-        case["status"] = data.get("status", case["status"])
-        return redirect(url_for("index"))
-    if request.method == "DELETE":
-        cases.remove(case)
-        return "", 204
+cases = Case.query.order_by(Case.created_at.desc()).all()
+return render_template('index.html', cases=cases)
 
-@app.route("/cases/<int:case_id>/close", methods=["POST"])
-def close_case(case_id: int):
-    case = next((c for c in cases if c["id"] == case_id), None)
-    if not case:
-        return "Case not found", 404
-    case["status"] = "CLOSED"
-    return redirect(url_for("index"))
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8080, debug=True)
+@app.route('/close/<int:case_id>', methods=['POST'])
+def close_case(case_id):
+c = Case.query.get_or_404(case_id)
+c.status = 'closed'
+db.session.commit()
+return redirect(url_for('index'))
+
+
+if __name__ == '__main__':
+with app.app_context():
+db.create_all()
+app.run(host='0.0.0.0', port=8080)
