@@ -1,0 +1,23 @@
+# Edit these if needed (image repo/tag)
+image:
+  repository: banking-case-manager
+  tag: latest
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+service:
+  type: ClusterIP
+  port: 80
+
+# Database settings - chart expects a pre-created Secret if useSecret is true.
+database:
+  useSecret: true
+  secretName: postgres-credentials   # Kubernetes Secret name (we provide k8s/postgres-secret.yaml)
+  host: pg-bank-postgresql
+  port: 5432
+  name: postgres
+  user: postgres
+  password: "password123"  # placeholder; prefer using the Secret instead of this value
+
+resources: {}
