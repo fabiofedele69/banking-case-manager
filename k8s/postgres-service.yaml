@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: pg-bank-postgresql
+  namespace: banking
+spec:
+  type: ClusterIP
+  selector:
+    app: pg-bank-postgresql
+  ports:
+    - port: 5432
+      targetPort: 5432
+      protocol: TCP
