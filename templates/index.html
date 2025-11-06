@@ -1,118 +1,52 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
 <head>
-    <title>Banking Case Manager</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 40px; }
-        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f2f2f2; }
-        input, select { padding: 5px; margin-right: 10px; }
-        button { padding: 5px 10px; cursor: pointer; }
-        .OPEN { background-color: #d4edda; }   /* green */
-        .CLOSED { background-color: #f8d7da; } /* red */
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Banking Case Manager</title>
+<style>
+body { font-family: Arial, Helvetica, sans-serif; margin: 2rem; }
+.case { border: 1px solid #ddd; padding: 1rem; margin-bottom: 1rem; }
+.closed { background:#f8f8f8; color: #888; }
+</style>
 </head>
 <body>
-    <h1>Banking Case Manager</h1>
+<h1>Banking Case Manager</h1>
 
-    <!-- Create new case -->
-    <h2>Create New Case</h2>
-    <form id="createForm">
-        <input type="text" id="customer_name" placeholder="Customer Name" required>
-        <input type="text" id="case_type" placeholder="Case Type" required>
-        <input type="text" id="description" placeholder="Description">
-        <button type="submit">Add Case</button>
-    </form>
 
-    <!-- Cases Table -->
-    <h2>Cases</h2>
-    <table id="casesTable">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Customer</th>
-                <th>Case Type</th>
-                <th>Status</th>
-                <th>Description</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
+<h2>Create new case</h2>
+<form method="post">
+<div>
+<label>Title</label><br>
+<input type="text" name="title" required style="width:400px">
+</div>
+<div>
+<label>Description</label><br>
+<textarea name="description" rows="4" cols="60"></textarea>
+</div>
+<div style="margin-top:8px">
+<button type="submit">Create</button>
+</div>
+</form>
 
-    <script>
-        const tableBody = document.querySelector("#casesTable tbody");
-        const createForm = document.getElementById("createForm");
 
-        // Fetch and display all cases
-        async function loadCases() {
-            tableBody.innerHTML = '';
-            const res = await fetch("/cases");
-            const cases = await res.json();
-            cases.forEach(c => {
-                const row = document.createElement("tr");
-                row.className = c.status;
-                row.innerHTML = `
-                    <td>${c.id}</td>
-                    <td><input type="text" value="${c.customer_name}" data-id="${c.id}" class="editCustomer"></td>
-                    <td><input type="text" value="${c.case_type}" data-id="${c.id}" class="editType"></td>
-                    <td>
-                        <select data-id="${c.id}" class="editStatus">
-                            <option value="OPEN" ${c.status==="OPEN" ? "selected" : ""}>OPEN</option>
-                            <option value="CLOSED" ${c.status==="CLOSED" ? "selected" : ""}>CLOSED</option>
-                        </select>
-                    </td>
-                    <td><input type="text" value="${c.description}" data-id="${c.id}" class="editDesc"></td>
-                    <td>
-                        <button onclick="updateCase(${c.id})">Update</button>
-                        <button onclick="deleteCase(${c.id})">Delete</button>
-                    </td>
-                `;
-                tableBody.appendChild(row);
-            });
-        }
+<h2>Open cases</h2>
+{% for c in cases %}
+<div class="case {% if c.status != 'open' %}closed{% endif %}">
+<strong>#{{ c.id }} - {{ c.title }}</strong>
+<div><small>{{ c.created_at }}</small></div>
+<p>{{ c.description }}</p>
+<div>Status: {{ c.status }}</div>
+{% if c.status == 'open' %}
+<form method="post" action="/close/{{c.id}}">
+<button type="submit">Close</button>
+</form>
+{% endif %}
+</div>
+{% else %}
+<p>No cases found.</p>
+{% endfor %}
 
-        // Create new case
-        createForm.addEventListener("submit", async (e) => {
-            e.preventDefault();
-            const customer_name = document.getElementById("customer_name").value;
-            const case_type = document.getElementById("case_type").value;
-            const description = document.getElementById("description").value;
 
-            await fetch("/cases", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ customer_name, case_type, description })
-            });
-
-            createForm.reset();
-            loadCases();
-        });
-
-        // Update existing case
-        async function updateCase(id) {
-            const customer_name = document.querySelector(`.editCustomer[data-id='${id}']`).value;
-            const case_type = document.querySelector(`.editType[data-id='${id}']`).value;
-            const status = document.querySelector(`.editStatus[data-id='${id}']`).value;
-            const description = document.querySelector(`.editDesc[data-id='${id}']`).value;
-
-            await fetch(`/cases/${id}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ customer_name, case_type, status, description })
-            });
-            loadCases();
-        }
-
-        // Delete case
-        async function deleteCase(id) {
-            await fetch(`/cases/${id}`, { method: "DELETE" });
-            loadCases();
-        }
-
-        // Initial load
-        loadCases();
-    </script>
 </body>
 </html>
