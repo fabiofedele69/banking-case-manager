@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pg-bank-postgresql
+  namespace: banking
+  labels:
+    app: pg-bank-postgresql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pg-bank-postgresql
+  template:
+    metadata:
+      labels:
+        app: pg-bank-postgresql
+    spec:
+      containers:
+        - name: postgres
+          image: bitnami/postgresql:15
+          env:
+            - name: POSTGRESQL_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: POSTGRES_DB
+            - name: POSTGRESQL_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: POSTGRES_USER
+            - name: POSTGRESQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: POSTGRES_PASSWORD
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: data
+              mountPath: /bitnami/postgresql
+      volumes:
+        - name: data
+          emptyDir: {}
